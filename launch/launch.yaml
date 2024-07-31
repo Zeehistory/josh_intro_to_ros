@@ -12,11 +12,11 @@ launch:
     name: "bluerov2_camera"
     namespace: ""
   
-# - node:
-#     pkg: "intro_to_ros"
-#     exec: "arm"
-#     name: "arm"
-#     namespace: ""
+- node:
+    pkg: "josh_intro_to_ros"
+    exec: "arm"
+    name: "arm"
+    namespace: ""
 
 # - node:
 #     pkg: "intro_to_ros"
@@ -24,31 +24,32 @@ launch:
 #     name: "movement"
 #     namespace: ""
 
-- node:
-    pkg: "intro_to_ros"
-    exec: "depth"
-    name: "depth"
-    namespace: "" 
+# - node:
+#     pkg: "josh_intro_to_ros"
+#     exec: "depth"
+#     name: "depth"
+#     namespace: "" 
 
 # - node:
-#     pkg: "intro_to_ros"
+#     pkg: "josh_intro_to_ros"
 #     exec: "depth_control"
 #     name: "depth_control"
 #     namespace: ""
+
 # - node:
-#     pkg: "intro_to_ros"
+#     pkg: "josh_intro_to_ros"
 #     exec: "heading_control"
 #     name: "heading_control"
 #     namespace: ""
 
 - node:
-    pkg: "intro_to_ros"
+    pkg: "josh_intro_to_ros"
     exec: "lane_subscriber"
     name: "lane_subscriber"
     namespace: ""
 
 # - node:
-#     pkg: "intro_to_ros"
+#     pkg: "josh_intro_to_ros"
 #     exec: "tag_subscriber"
 #     name: "tag_subscriber"
 #     namespace: ""

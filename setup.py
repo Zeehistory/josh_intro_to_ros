@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 import os
 from glob import glob
 
-package_name = 'intro_to_ros'
+package_name = 'josh_intro_to_ros'
 
 setup(
     name=package_name,
@@ -25,16 +25,16 @@ setup(
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': ['publisher = intro_to_ros.publisher:main',
-# 'subscriber = intro_to_ros.subscriber:main',
-'bluerov2_sensors = intro_to_ros.bluerov2_sensors:main',
-'arm = intro_to_ros.arm:main',
-'movement = intro_to_ros.movement:main',
-'depth = intro_to_ros.depth:main',
-'depth_control = intro_to_ros.depth_control:main',
-'heading_control = intro_to_ros.heading_control:main',
-'lane_subscriber = intro_to_ros.lane_subscriber:main',
-'tag_subscriber = intro_to_ros.tag_subscriber:main'
+        'console_scripts': ['publisher = josh_intro_to_ros.publisher:main',
+# 'subscriber = josh_intro_to_ros.subscriber:main',
+'bluerov2_sensors = josh_intro_to_ros.bluerov2_sensors:main',
+'arm = josh_intro_to_ros.arm:main',
+'movement = josh_intro_to_ros.movement:main',
+'depth = josh_intro_to_ros.depth:main',
+'depth_control = josh_intro_to_ros.depth_control:main',
+'heading_control = josh_intro_to_ros.heading_control:main',
+'lane_subscriber = josh_intro_to_ros.lane_subscriber:main',
+'tag_subscriber = josh_intro_to_ros.tag_subscriber:main'
         ],
     },
 )
