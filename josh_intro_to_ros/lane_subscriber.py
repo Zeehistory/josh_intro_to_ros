@@ -77,7 +77,7 @@ class LaneSubscriber(Node):
 
         self.image = image
         self.rotation()
-        time.sleep(1)
+        # time.sleep(1)
 
     def rotation(self):
         '''
@@ -100,12 +100,12 @@ class LaneSubscriber(Node):
         else:
             middleLanes = self.get_lane_center(lanes)
             recommendation = self.recommendation(middleLanes)
+        self.get_logger().info("STUFF")
         msg = Int16()
         msg.data = self.heading + int(recommendation)
 
         self.draw_lines(self.image,lines)
         self.draw_lanes(self.image,lanes)
-        self.get_logger().info("DRAWING IMAGE")
         cv2.imwrite("testfile.png",self.image)
 
         self.desired_heading_publisher.publish(msg)

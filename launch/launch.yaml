@@ -19,7 +19,7 @@ launch:
 #     namespace: ""
 
 # - node:
-#     pkg: "intro_to_ros"
+#     pkg: "josh_intro_to_ros"
 #     exec: "movement"
 #     name: "movement"
 #     namespace: ""
@@ -54,8 +54,14 @@ launch:
     name: "tag_subscriber"
     namespace: ""
 
+# - node:
+#     pkg: "josh_intro_to_ros"
+#     exec: "lights_controller"
+#     name: "lights_controller"
+#     namespace: ""
+
 - node:
     pkg: "josh_intro_to_ros"
-    exec: "lights_controller"
-    name: "lights_controller"
+    exec: "controller"
+    name: "strat_controller"
     namespace: ""
