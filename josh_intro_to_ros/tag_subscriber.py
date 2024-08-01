@@ -7,7 +7,7 @@ import rclpy
 from rclpy.node import Node
 from mavros_msgs.msg import ManualControl
 from cv_bridge import CvBridge
-from std_msgs.msg import Int16
+from std_msgs.msg import Int16, Bool
 from sensor_msgs.msg import Imu
 from sensor_msgs.msg import Image
 import numpy as np
@@ -41,6 +41,18 @@ class TagSubscriber(Node):
         self.desired_heading_publisher = self.create_publisher(
             Int16,
             "bluerov2/desired_heading",
+            10
+        )
+
+        self.forward_publisher = self.create_publisher(
+            ManualControl,
+            "bluerov2/manual_control",
+            10
+        )
+
+        self.lights_publisher = self.create_publisher(
+            Bool,
+            "bluerov2/lights_control",
             10
         )
 
@@ -102,27 +114,38 @@ class TagSubscriber(Node):
         gblur, gray = self.process_frame(img)
         tags = self.detect_april_tags(gray)
         color_frame = self.outline_tags(img,tags)
+
         
         for tag in tags:
             x_angle = self.calc_horiz_angle(img,tag)
             y_angle = self.calc_rel_angle(img,tag)
             z_distance = self.calc_dist(img,tag)
-            self.get_logger().info(f"x Angle: {x_angle}, y Angle: {y_angle}, Distance: {z_distance}")
+            # self.get_logger().info(f"x Angle: {x_angle}, y Angle: {y_angle}, Distance: {z_distance}")
             desired_heading = x_angle + self.heading #or would this be + instead of - (x_angle +) 
             desired_heading = desired_heading % 360 
 
+            msg = ManualControl()
+            msg.x = 100.0
             self.desired_heading_publisher.publish(Int16(data=int(desired_heading)))
-            self.get_logger().info(f"current heading: {self.heading}, desired heading: {desired_heading}")
+            self.forward_publisher.publish(msg)
+            # self.get_logger().info(f"MANUAL CONTROL X: {msg.x}")
+            # self.get_logger().info(f"current heading: {self.heading}, desired heading: {desired_heading}")
+
+
+            # self.get_logger().info(f"Z DISTANCE: {type(z_distance)}")
+            if (z_distance < 2.0):
+                msg = Bool()
+                msg.data = True
+                # self.get_logger().info(f"PUBLISHING Z DISTANCE: {z_distance}")
+                self.lights_publisher.publish(msg)
         
         color_frame = self.outline_tags(img,tags)
         cv2.imwrite("tagframe.png",color_frame)
-        time.sleep(1)
 
         if self.heading is None:
             self.get_logger().warning("Current heading is not available.")
             return
         
-
     def process_frame(self,frame):
         """
         Applies Gaussian blur and converts the frame to grayscale.

@@ -46,6 +46,11 @@ class LaneSubscriber(Node):
             10
         )
 
+
+        # ardusub testing
+        self.image = cv2.imread("afile.png")
+        self.create_timer(1.0, self.rotation)
+
     def headingSubscriberCallback(self,msg):
         '''
         Heading Subscriber Callback
@@ -83,26 +88,29 @@ class LaneSubscriber(Node):
             return
         img = self.image
         lines = self.detect_lines(img)
-        # if (lines == None):
-        #     return
+        if (lines is None):
+            return
+        self.get_logger().info(f"LINES: {len(lines)}")
         if (len(lines) == 0):
             return
         lanes = self.detect_lanes(lines)
+        self.get_logger().info(f"LANES: {len(lanes)}")
         if (len(lanes) == 0):
-            return
-        middleLanes = self.get_lane_center(lanes)
-        recommendation = self.recommendation(middleLanes)
+            recommendation = self.recommendation(lines)
+        else:
+            middleLanes = self.get_lane_center(lanes)
+            recommendation = self.recommendation(middleLanes)
         msg = Int16()
         msg.data = self.heading + int(recommendation)
 
         self.draw_lines(self.image,lines)
-        # self.draw_lanes(self.image,lanes)
-
+        self.draw_lanes(self.image,lanes)
+        self.get_logger().info("DRAWING IMAGE")
         cv2.imwrite("testfile.png",self.image)
 
         self.desired_heading_publisher.publish(msg)
 
-    def detect_lines(self,img, threshold1 = 150, threshold2 = 250, apertureSize = 3, minLineLength = 400, maxLineGap = 50):
+    def detect_lines(self,img, threshold1 = 150, threshold2 = 250, apertureSize = 3, minLineLength = 100, maxLineGap = 50):
         '''
         Detects lines in the image
 
@@ -115,9 +123,10 @@ class LaneSubscriber(Node):
 
         returns lines: an array of coordinates of lines
         '''
+        cv2.imwrite("afile.png",img)
         gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
         edges = cv2.Canny(gray, threshold1 = int(threshold1), threshold2 = int(threshold2), apertureSize = apertureSize) # detect edges
-        # cv2.imwrite("testfile.png",edges)
+        cv2.imwrite("edges.png",edges)
         lines = None
         lines = cv2.HoughLinesP(
                         edges,
@@ -127,6 +136,7 @@ class LaneSubscriber(Node):
                         minLineLength = int(minLineLength),
                         maxLineGap = int(maxLineGap),
                 ) # detect lines
+        self.get_logger().info(f"LANES: {type(lines)}")
         return lines
 
     def draw_lines(self,img,lines, color = (255,0,0)):
@@ -293,6 +303,7 @@ class LaneSubscriber(Node):
             if (np.abs(laneIntercept-3824/2) < np.abs(intercept-3824/2)):
                 intercept = laneIntercept
                 slope = laneSlope
+        self.get_logger().info(f"DEGREES CHANGE: {np.degrees(np.arctan(1.0/slope))}")
         return np.degrees(np.arctan(1.0/slope))
     
     def draw_lanes(self,img, lanes):
