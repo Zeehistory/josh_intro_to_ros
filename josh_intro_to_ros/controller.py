@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from mavros_msgs.msg import ManualControl,Altitude
-from std_msgs.msg import Int16
+from std_msgs.msg import Int16, Float64
 
 class Controller(Node):
 
@@ -42,8 +42,8 @@ class Controller(Node):
         )
 
         self.forward_publisher = self.create_publisher(
-            ManualControl,
-            "bluerov2/manual_control",
+            Float64,
+            "bluerov2/x",
             10
         )
 
@@ -68,18 +68,19 @@ class Controller(Node):
     
     def timerCallback(self):
         self.depth_publisher.publish(Altitude(local = 0.5))
-        if (self.tagHeading is not None):
+        if (self.tagHeading is not None and self.tagHeading.data != 0.0):
             self.heading_publisher.publish(self.tagHeading)
-            self.forward_publisher.publish(ManualControl(x=100))
+            self.forward_publisher.publish(Float64(data=100.0))
             self.get_logger().info(f"PUBLISHING TAG SUBSCRIBER: {self.tagHeading.data}")
             return
-        if (self.laneHeading is not None):
+        if (self.laneHeading is not None and self.laneHeading.data != 0.0):
             self.heading_publisher.publish(self.laneHeading)
-            self.forward_publisher.publish(ManualControl(x=100))
+            self.forward_publisher.publish(Float64(data=100.0))
             self.get_logger().info(f"PUBLISHING LANE SUBSCRIBER: {self.laneHeading.data}")
-        
         else:
             if (self.heading is not None):
+                self.get_logger().info(f"LOST")
+                self.forward_publisher.publish(Float64(data=50.0))
                 self.heading_publisher.publish(Int16(data = self.heading.data + 90))
 
 def main(args = None):

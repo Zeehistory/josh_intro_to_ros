@@ -2,7 +2,7 @@
 import rclpy
 from rclpy.node import Node
 from mavros_msgs.msg import ManualControl
-from std_msgs.msg import Int16
+from std_msgs.msg import Int16, Float64
 from sensor_msgs.msg import Imu
 import numpy as np
 import math
@@ -48,8 +48,8 @@ class HeadingControl(Node):
         )
 
         self.publisher = self.create_publisher(
-            ManualControl,
-            "bluerov2/manual_control",
+            Float64,
+            "bluerov2/r",
             10
         )
 
@@ -95,7 +95,8 @@ class HeadingControl(Node):
         Kp = 1.0
         #Ki = 0.0
         Kd = 0.5
-        msg = ManualControl()
+        msg = Float64()
+        msg.data = 0.0
         if (self.desired_heading == None): return
         if (self.measured_heading == None): return
         self.measured_heading = self.measured_heading
@@ -116,8 +117,8 @@ class HeadingControl(Node):
         # self.get_logger().info(f"\nDerivative: {self.derivative}")
         # add all & publish 
         # msg.r = float((self.proportional + self.integral + self.derivative) * -1)
-        msg.r = float((self.proportional + self.derivative) * 1)
-        msg.r = min(max(msg.r, -self.max_throttle), self.max_throttle)
+        msg.data = float((self.proportional + self.derivative) * 1)
+        msg.data = min(max(msg.data, -self.max_throttle), self.max_throttle)
         # msg.x = None
         # msg.y = None
         # msg.z = None

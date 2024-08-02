@@ -2,6 +2,7 @@
 import rclpy
 from rclpy.node import Node
 from mavros_msgs.msg import Altitude, ManualControl
+from std_msgs.msg import Int16, Float64
 
 class depthControl(Node):
     '''
@@ -37,8 +38,8 @@ class depthControl(Node):
         )
         self.get_logger().info("Starting desired depth subscription")
         self.publisher = self.create_publisher(
-            ManualControl, 
-            "bluerov2/manual_control",
+            Float64, 
+            "bluerov2/z",
             10
         )
         self.get_logger().info("Starting publisher")
@@ -58,15 +59,16 @@ class depthControl(Node):
         # self.get_logger().info(f"\nDesired Depth: {msg.local}")
     
     def depth_control(self):
-        msg = ManualControl()
+        msg = Float64()
+        msg.data = 0.0
         # initial part, getting value, ect
         if (self.measured_depth is None or self.desired_depth is None):
             return
         measured_position = self.measured_depth.local #og local
         self.desired_position = self.desired_depth.local
         # self.desired_position = self.desired_depth
-        self.get_logger().info(f"\nMeasured Depth: {measured_position}")
-        self.get_logger().info(f"\nDesired Depth: {self.desired_position}")
+        # self.get_logger().info(f"\nMeasured Depth: {measured_position}")
+        # self.get_logger().info(f"\nDesired Depth: {self.desired_position}")
         if (self.desired_position is None): return
         # desired_position = 0.5
         dt = self.t2 - self.t1
@@ -96,13 +98,13 @@ class depthControl(Node):
         # self.get_logger().info(f"\nDerivative: {self.derivative}")
 
         # add all & publish 
-        msg.z = float((self.proportional + self.integral + self.derivative) * 1)
-        msg.z = min(max(msg.z, -self.max_throttle), self.max_throttle)
-        msg.x = None
-        msg.y = None
-        msg.r = None
+        msg.data = float((self.proportional + self.integral + self.derivative) * 1)
+        msg.data = min(max(msg.data, -self.max_throttle), self.max_throttle)
+        # msg.x = None
+        # msg.y = None
+        # msg.r = None
 
-        self.get_logger().info(f"\nPID: {msg.z}")
+        # self.get_logger().info(f"\nPID: {msg.data}")
         self.publisher.publish(msg)
         
 def main(args = None):

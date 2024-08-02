@@ -48,7 +48,7 @@ class LaneSubscriber(Node):
 
 
         # ardusub testing
-        self.image = cv2.imread("afile.png")
+        self.image = cv2.imread("lanes.png")
         self.create_timer(1.0, self.rotation)
 
     def headingSubscriberCallback(self,msg):
@@ -84,6 +84,7 @@ class LaneSubscriber(Node):
         calls functions to determine which way to rotate
         to follow the lane
         '''
+        self.get_logger().info("IMAGING")
         if (self.heading == None):
             return
         img = self.image
@@ -126,7 +127,7 @@ class LaneSubscriber(Node):
         cv2.imwrite("afile.png",img)
         gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
         edges = cv2.Canny(gray, threshold1 = int(threshold1), threshold2 = int(threshold2), apertureSize = apertureSize) # detect edges
-        cv2.imwrite("edges.png",edges)
+        cv2.imwrite("edges.png", edges)
         lines = None
         lines = cv2.HoughLinesP(
                         edges,

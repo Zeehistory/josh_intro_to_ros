@@ -36,7 +36,8 @@ setup(
 'lane_subscriber = josh_intro_to_ros.lane_subscriber:main',
 'tag_subscriber = josh_intro_to_ros.tag_subscriber:main',
 'lights_controller = josh_intro_to_ros.lights_controller:main', 
-'controller = josh_intro_to_ros.controller:main'
+'controller = josh_intro_to_ros.controller:main', 
+'message = josh_intro_to_ros.message:main'
         ],
     },
 )

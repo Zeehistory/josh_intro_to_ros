@@ -45,8 +45,8 @@ class TagSubscriber(Node):
         )
 
         self.forward_publisher = self.create_publisher(
-            ManualControl,
-            "bluerov2/manual_control",
+            Int16,
+            "bluerov2/x",
             10
         )
 
@@ -116,7 +116,7 @@ class TagSubscriber(Node):
         color_frame = self.outline_tags(img,tags)
 
         if (len(tags) == 0):
-            self.desired_heading_publisher.publish(Int16(data = self.heading))
+            self.desired_heading_publisher.publish(Int16())
             
 
         for tag in tags:
@@ -127,14 +127,15 @@ class TagSubscriber(Node):
             desired_heading = x_angle + self.heading #or would this be + instead of - (x_angle +) 
             desired_heading = desired_heading % 360 
 
-            msg = ManualControl()
-            msg.x = 50.0
+            # msg = Int16()
+            # msg.x = 50.0
             # msg.r = None
             # msg.y = None
             # msg.z = None
+            # self.get_logger().info(desired_heading)
             self.desired_heading_publisher.publish(Int16(data=int(desired_heading)))
             # self.forward_publisher.publish(msg)
-            # self.get_logger().info(f"MANUAL CONTROL X: {msg.x}")
+            self.get_logger().info(f"MANUAL CONTROL X: {msg.data}")
             # self.get_logger().info(f"current heading: {self.heading}, desired heading: {desired_heading}")
 
 
