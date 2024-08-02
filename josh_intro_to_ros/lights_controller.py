@@ -31,7 +31,7 @@ class LightsController(Node):
         # self.get_logger().info("SDGFSDGSDGS")
         # self.get_logger().info(msg)
         if (msg.data):
-            self.turn_lights_on(100)
+            self.turn_lights_on(99)
         else:
             self.turn_lights_on(0)
 

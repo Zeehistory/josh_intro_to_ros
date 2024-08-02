@@ -71,3 +71,9 @@ launch:
     exec: "message"    
     name: "message"
     namespace: ""
+
+# - node:
+#     pkg: "bluerov2_logger"
+#     exec: "bluerov2_bag_recorder"
+#     name: "bluerov2_bag_recorder"
+#     namespace: ""

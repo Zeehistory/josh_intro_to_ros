@@ -135,12 +135,11 @@ class TagSubscriber(Node):
             # self.get_logger().info(desired_heading)
             self.desired_heading_publisher.publish(Int16(data=int(desired_heading)))
             # self.forward_publisher.publish(msg)
-            self.get_logger().info(f"MANUAL CONTROL X: {msg.data}")
-            # self.get_logger().info(f"current heading: {self.heading}, desired heading: {desired_heading}")
+            self.get_logger().info(f"current heading: {self.heading}, desired heading: {desired_heading}")
 
 
             # self.get_logger().info(f"Z DISTANCE: {type(z_distance)}")
-            if (z_distance < 2.0):
+            if (z_distance < 3.0):
                 msg = Bool()
                 msg.data = True
                 # self.get_logger().info(f"PUBLISHING Z DISTANCE: {z_distance}")

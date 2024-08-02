@@ -10,6 +10,9 @@ class Controller(Node):
     tagHeading = None
     laneHeading = None
     heading = None
+    orig_heading = None
+    step = 0
+    called = False
 
     def __init__(self):
         super().__init__("controller")
@@ -47,6 +50,12 @@ class Controller(Node):
             10
         )
 
+        self.rotate_publisher = self.create_publisher(
+            Float64,
+            "bluerov2/r",
+            10
+        )
+
         self.depth_publisher = self.create_publisher(
             Altitude,
             "bluerov2/desired_depth",
@@ -65,9 +74,13 @@ class Controller(Node):
 
     def headingCallback(self,msg):
         self.heading = msg
+        if (not self.called):
+            self.orig_heading = msg.data
+            self.called = True
     
     def timerCallback(self):
-        self.depth_publisher.publish(Altitude(local = 0.5))
+        self.depth_publisher.publish(Altitude(local = 0.4))
+
         if (self.tagHeading is not None and self.tagHeading.data != 0.0):
             self.heading_publisher.publish(self.tagHeading)
             self.forward_publisher.publish(Float64(data=100.0))
@@ -80,8 +93,40 @@ class Controller(Node):
         else:
             if (self.heading is not None):
                 self.get_logger().info(f"LOST")
-                self.forward_publisher.publish(Float64(data=50.0))
-                self.heading_publisher.publish(Int16(data = self.heading.data + 90))
+                #self.heading_publisher.publish(Int16(data = self.heading.data))
+                #if (int(self.step/20) % 2 == 0):
+                self.get_logger().info(f"ORIGINAL HEADING: {self.orig_heading}")
+                if ((self.step-30)%30 > 25):
+                    if (int(self.step/30)%2 == 0):
+                        self.heading_publisher.publish(Int16(data = self.orig_heading + 180))
+                    else:
+                        self.heading_publisher.publish(Int16(data = self.orig_heading))
+                    self.forward_publisher.publish(Float64(data = 0.1))
+                else:
+                    self.forward_publisher.publish(Float64(data = 25.0))
+                    self.rotate_publisher.publish(Float64(data = 0.1))
+
+                self.step += 0.5
+                #     if (int(self.step/10) % 2 == 0):
+                #         self.forward_publisher.publish(Float64(data = 25.0))
+                #         self.rotate_publisher.publish(Float64(data = 0.1))
+                #     else:
+                #         self.forward_publisher.publish(Float64(data = 0.1))
+                #         if (int(self.step/5) % 2 == 0):
+                #             self.heading_publisher.publish(Int16(data = self.heading.data + 90))
+                #         else:
+                #             self.heading_publisher.publish(Int16(data = self.orig_heading))
+                # else:
+                #     if (int(self.step/10) % 2 == 0):
+                #         self.forward_publisher.publish(Float64(data = -25.0))
+                #         self.rotate_publisher.publish(Float64(data = 0.1))
+                #     else:
+                #         self.forward_publisher.publish(Float64(data = 0.1))
+                #         if (int(self.step/5) % 2 == 0):
+                #             self.heading_publisher.publish(Int16(data = self.heading.data - 90))
+                #         else:
+                #             self.heading_publisher.publish(Int16(data = self.orig_heading-180))
+
 
 def main(args = None):
     rclpy.init(args = args)
