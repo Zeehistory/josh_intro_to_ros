@@ -21,10 +21,15 @@ class HeadingControl(Node):
 
     def __init__(self):
         super().__init__("headingControl")
-        '''
-        creating current heading and desired heading subscriptions
-        creating a power putput publisher
-        '''
+        """
+        Initializes the HeadingControl node, creating subscriptions and a publisher.
+        Subscriptions:
+            - "bluerov2/heading": Current heading (Int16)
+            - "bluerov2/imu": Angular velocity from IMU (Imu)
+            - "bluerov2/desired_heading": Target heading (Int16)
+        Publisher:
+            - "bluerov2/r": Control signal for heading adjustment (Float64)
+        """
 
         self.measured_heading_sub = self.create_subscription(
             Int16,
@@ -54,6 +59,13 @@ class HeadingControl(Node):
         )
 
     def measuredHeadingCallback(self,msg):
+        """
+        Callback function for the "bluerov2/heading" topic.
+        Updates the current measured heading from the incoming Int16 message.
+
+        Args:
+            msg (Int16): Message containing the current heading in degrees.
+        """
         self.measured_heading = msg.data
         # if (self.t1 == 0):
         #     self.t1 = msg.header.stamp.sec + msg.header.stamp.nanosec*1e-9
@@ -67,7 +79,11 @@ class HeadingControl(Node):
 
     def measuredImuCallback(self,msg):
         """
-        Retrieving angular velocity from IMU sensors with a timer 
+        Callback function for the "bluerov2/imu" topic.
+        Retrieves angular velocity from the IMU message and updates timestamps for calculations.
+
+        Args:
+            msg (Imu): IMU message containing angular velocity data.
         """
         self.measured_imu = msg.angular_velocity.z
         if (self.t1 == 0):
@@ -81,16 +97,26 @@ class HeadingControl(Node):
         # self.get_logger().info(f"\nMeasured Angular Velocity: {self.measured_imu}")
 
     def desiredHeadingCallback(self,msg):
+        """
+        Callback function for the "bluerov2/desired_heading" topic.
+        Updates the target desired heading from the incoming Int16 message.
+
+        Args:
+            msg (Int16): Message containing the desired heading in degrees.
+        """
         self.desired_heading = msg.data
         self.get_logger().info(f"\nDesired Heading: {msg.data}")
 
     def power_calculations(self):
-        '''
-        Calculating the 
-        power output based off of: 
-    
-        rac{360}{1+e^{rac{-\pi x}{180}}}-180
-        '''
+        """
+        Computes the control signal for heading adjustment based on PID calculations.
+        
+        Proportional-Derivative Control:
+            - Proportional term: Adjusts output based on the current error.
+            - Derivative term: Predicts future trends using angular velocity.
+        
+        Publishes the computed control signal to the "bluerov2/r" topic.
+        """
         # constants
         Kp = 1.0
         #Ki = 0.0
