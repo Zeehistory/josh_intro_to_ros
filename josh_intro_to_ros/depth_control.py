@@ -6,9 +6,15 @@ from std_msgs.msg import Int16, Float64
 
 class depthControl(Node):
     '''
-    node to control depth based on PID control calculations
-
-    PID = integral + proportional + derivative
+    Attributes:
+        error_accumulator (float): Cumulative error for the integral term.
+        previous_error (float): Error from the previous control cycle for the derivative term.
+        t1 (float): Timestamp of the previous control cycle.
+        t2 (float): Timestamp of the current control cycle.
+        max_integral (float): Maximum value for the integral term to prevent windup.
+        max_throttle (float): Maximum value for the output throttle signal.
+        desired_depth (Altitude): Desired depth target received from the subscription.
+        measured_depth (Altitude): Current depth measurement received from the subscription.
     '''
     error_accumulator = 0
     previous_error = 0
@@ -20,91 +26,122 @@ class depthControl(Node):
     measured_depth = None
     
     def __init__(self):
+        """
+        Initializes the DepthControl node, setting up the required subscriptions and publisher.
 
+        Subscriptions:
+            - "bluerov2/depth": Current depth measurements (Altitude message).
+            - "bluerov2/desired_depth": Target depth (Altitude message).
+
+        Publisher:
+            - "bluerov2/z": PID control signal for adjusting depth (Float64 message).
+        """
         super().__init__("depthControl")
-        
+
         self.measuredDepth = self.create_subscription(
             Altitude,
             "bluerov2/depth",
             self.measuredDepthCallback,
             10
         )
-        self.get_logger().info("Starting measured depth subscription")
+        self.get_logger().info("Starting measured depth subscription.")
+
         self.desiredDepth = self.create_subscription(
             Altitude,
             "bluerov2/desired_depth",
             self.desiredDepthCallback,
             10
         )
-        self.get_logger().info("Starting desired depth subscription")
+        self.get_logger().info("Starting desired depth subscription.")
+
         self.publisher = self.create_publisher(
-            Float64, 
+            Float64,
             "bluerov2/z",
             10
         )
-        self.get_logger().info("Starting publisher")
+        self.get_logger().info("Starting publisher.")
 
     def measuredDepthCallback(self, msg):
+        """
+        Callback function for the "bluerov2/depth" topic.
+        Updates the current measured depth and timestamps for the control loop.
+
+        Args:
+            msg (Altitude): Message containing the current depth measurement.
+        """
         self.measured_depth = msg
-        if (self.t1 == 0):
-            self.t1 = msg.header.stamp.sec + msg.header.stamp.nanosec*1e-9
-            self.t2 = msg.header.stamp.sec + msg.header.stamp.nanosec*1e-9
+        if self.t1 == 0:
+            self.t1 = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+            self.t2 = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
         else:
             self.t1 = self.t2
-            self.t2 = msg.header.stamp.sec + msg.header.stamp.nanosec*1e-9
+            self.t2 = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
         self.depth_control()
-        
+
     def desiredDepthCallback(self, msg):
+        """
+        Callback function for the "bluerov2/desired_depth" topic.
+        Updates the target depth for the control loop.
+
+        Args:
+            msg (Altitude): Message containing the desired depth.
+        """
         self.desired_depth = msg
-        # self.get_logger().info(f"\nDesired Depth: {msg.local}")
-    
+
     def depth_control(self):
+        """
+        Implements the PID control algorithm to calculate the depth adjustment signal.
+        Combines proportional, integral, and derivative terms based on the current and desired depth.
+
+        The output signal is limited to `max_throttle` to prevent excessive control commands.
+
+        Control Parameters:
+            - Proportional gain (Kp): -150.0
+            - Integral gain (Ki): -20.0
+            - Derivative gain (Kd): -50.0
+
+        Steps:
+            1. Calculate the error between desired and measured depth.
+            2. Compute the proportional, integral, and derivative terms.
+            3. Combine these terms to create the control signal.
+            4. Clamp the control signal to the range [-max_throttle, max_throttle].
+            5. Publish the control signal to the "bluerov2/z" topic.
+        """
         msg = Float64()
         msg.data = 0.0
-        # initial part, getting value, ect
-        if (self.measured_depth is None or self.desired_depth is None):
+
+        if self.measured_depth is None or self.desired_depth is None:
             return
-        measured_position = self.measured_depth.local #og local
+
+        measured_position = self.measured_depth.local
         self.desired_position = self.desired_depth.local
-        # self.desired_position = self.desired_depth
-        # self.get_logger().info(f"\nMeasured Depth: {measured_position}")
-        # self.get_logger().info(f"\nDesired Depth: {self.desired_position}")
-        if (self.desired_position is None): return
-        # desired_position = 0.5
+
+        if self.desired_position is None:
+            return
+
         dt = self.t2 - self.t1
-        # constants
+
+        # PID coefficients
         Kp = -150.0
         Ki = -20.0
         Kd = -50.0
-        # proportional control
+
+        # Proportional term
         error = self.desired_position - measured_position
-        # self.get_logger().info(f"\nError: {error}")
         self.proportional = Kp * error
-        # self.get_logger().info(f"\nProportional: {self.proportional}")
 
-        # integral control
-        self.error_accumulator += error * dt # DT = TIME SINCE LAST UPDATE
-        # self.get_logger().info(f"\nError Accumulator: {self.error_accumulator}")
-        self.integral = min(max(Ki * self.error_accumulator,-self.max_integral), self.max_integral) # PREVENTS INTEGRAL WINDUP PAST 1.0 & -1.0
-        # self.get_logger().info(f"\nIntegral: {self.integral}")
+        # Integral term
+        self.error_accumulator += error * dt
+        self.integral = min(max(Ki * self.error_accumulator, -self.max_integral), self.max_integral)
 
-        # derivative control
-        if (dt == 0): 
-            self.derivative = 0
-        else:
-            self.derivative = Kd * (error - self.previous_error) / dt 
+        # Derivative term
+        self.derivative = 0 if dt == 0 else Kd * (error - self.previous_error) / dt
         self.previous_error = error
-        # self.get_logger().info(f"\nPrevious Error: {self.previous_error}")
-        # self.get_logger().info(f"\nDerivative: {self.derivative}")
 
-        # add all & publish 
+        # Control signal
         msg.data = float((self.proportional + self.integral + self.derivative) * 1)
         msg.data = min(max(msg.data, -self.max_throttle), self.max_throttle)
-        # msg.x = None
-        # msg.y = None
-        # msg.r = None
 
-        # self.get_logger().info(f"\nPID: {msg.data}")
         self.publisher.publish(msg)
         
 def main(args = None):
